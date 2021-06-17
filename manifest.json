@@ -5,13 +5,13 @@
   "restartOnChannelsChange": 1,
 
   "channelsPopup": [
-    { "id": "folder", "title": "$NewNode" },
+    { "id": "folder", "title": "$NewFolder" },
+    { "id": "channel_folder", "title": "$NewNode" },
     { "id": "channel_read", "title": "$ChannelRead" },
     { "id": "channel_write", "title": "$ChannelWrite" }
-
   ],
 
-  "default_folder": {
+  "default_channel_folder": {
     "r":1,
     "chan":"$NewNode",
     "host": "127.0.0.1",

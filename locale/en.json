@@ -20,7 +20,7 @@
   "Action":"Action",
   "Value":"Value",
   "NewNode":"New Node",
-  "Title":"Node Title",
+  "Title":"Title",
   "ChannelRead": "Reading channel",
   "ChannelWrite": "Writing channel"
 
