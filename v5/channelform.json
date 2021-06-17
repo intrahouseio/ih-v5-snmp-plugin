@@ -40,7 +40,7 @@
         { "id": "set", "title": "set" }
       ]
     },
-    { "prop": "oid", "title": "$GetOid", "type": "input", "hide": "!data.p2.w" },
+    { "prop": "oid", "title": "$Oid", "type": "input", "hide": "!data.p2.w" },
 
     { "prop": "value", "title": "$Value", "type": "input", "hide": "!data.p2.w || (data.p2.act.id !== 'set')" }
   ]

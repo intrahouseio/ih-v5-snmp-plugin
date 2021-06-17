@@ -10,6 +10,7 @@
   "Type": "Тип",
   "TableOid": "Table OID",
   "GetOid": "OID",
+  "Oid": "OID",
   "TrapOid": "Reverse trap OID",
   "Interval": "Интервал (сек)",
   "Device": "Устройство",

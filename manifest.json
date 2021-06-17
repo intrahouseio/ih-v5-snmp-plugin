@@ -24,6 +24,7 @@
 
   "default_channel_read": {
     "r":1,
+    "chan":"ch_1",
     "type": "get",
     "get_oid": "1.3.6.1.2.1.1.5.0",
     "table_oid": "1.3.6.1.2.1.2.2",
@@ -35,6 +36,7 @@
   },
 
   "default_channel_write": {
+    "chan":"cw_1",
     "w":1,
     "act": "on",
     "oid": "1.3.6.1.4.1.2.6.2.2.1.2.1",
