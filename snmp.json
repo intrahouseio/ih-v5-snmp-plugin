@@ -1,0 +1,123 @@
+{
+  "id": "snmp",
+  "description": "SNMP plugin",
+  "gendevices": 0,
+  "smart": 1,
+  "restartOnChannelsChange":1,
+  "single": 0,
+  "module": "index.js",
+  "params": [],
+  "genrules": {},
+  "commands": [],
+  "sch": {
+    "parent": true,
+    "scheme": {
+      "tools": { "filter": false, "fixed": false, "name": "", "order": -1, "type": "parent", "width": 30 },
+      "host": { "filter": true, "fixed": false, "name": "$Host", "order": 1, "type": "STRING", "width": 200 },
+      "type": { "filter": true, "fixed": false, "name": "$Type", "order": 2, "type": "STRING", "width": 100 },
+      "get_oid": { "filter": true, "fixed": false, "name": "$GetOid", "order": 3, "type": "STRING", "width": 250 },
+      "interval": { "filter": true, "fixed": false, "name": "$Interval", "order": 4, "type": "STRING", "width": 150 },
+      "dn": { "filter": true, "fixed": false, "name": "$Device", "order": 5, "type": "STRING", "width": 200 }
+    },
+    "record": {
+      "parent": {
+        "name": "$Parent",
+        "order": 0,
+        "toolbar": false,
+        "properties": {
+          "host": { "name": "$Host", "order": 0, "type": "STRING" },
+          "port": { "name": "$Port", "order": 1, "type": "NUMBER" },
+          "trap_port": { "name": "$TrapPort", "order": 1, "type": "NUMBER" },
+          "community": { "name": "$Community", "order": 2, "type": "STRING" },
+          "transport": { "name": "$Transport", "order": 3,  "type": "autocomplete",
+            "data": [
+              { "id": "udp4", "name": "UDP4" },
+              { "id": "udp6", "name": "UDP6" }
+            ]
+          },
+          "version": { "name": "$Version", "order": 4,  "type": "autocomplete",
+            "data": [
+              { "id": 0, "name": "Version1" },
+              { "id": 1, "name": "Version2c" }
+            ]
+          }
+        }
+      },
+      "child": {
+        "name": "$Child",
+        "order": 1,
+        "toolbar": false,
+        "properties": {
+          "type": { "name": "$Type", "order": 1,  "type": "autocomplete",
+            "data": [
+              { "id": "get", "name": "GET" },
+              { "id": "table", "name": "TABLE" },
+              { "id": "trap", "name": "TRAP" }
+            ]
+          },
+          "table_oid": { "name": "$TableOid", "order": 2, "type": "STRING", "visible": "data.type === 'table'" },
+          "get_oid": { "name": "$GetOid", "order": 3, "type": "STRING" },
+          "trap_oid": { "name": "$TrapOid", "order": 4, "type": "STRING", "visible": "false" },
+          "interval": { "name": "$Interval", "order": 5, "type": "NUMBER", "visible": "(data.type === 'get' || data.type === 'table')" },
+          "dn": { "name": "$Device", "order": 6, "type": "autocomplete", "data": "devicesdroplist" },
+          "parse": { "name": "$Parse", "order": 7, "type": "TEXTAREA" }
+        }
+      },
+      "actions": {
+        "name": "$Actions",
+        "order": 2,
+        "toolbar": false,
+        "properties": {
+          "actions": { "name": "$Actions", "order": 8, "type": "multi",
+            "data": {
+              "scheme": {
+                  "act": { "name": "$Action", "type": "droplist", "order": 0, "data":[{"id":"on", "name":"on"}, {"id":"off", "name":"off"},{"id":"toggle", "name":"toggle"},{"id":"set", "name":"set"}] },
+                  "oid": { "name": "$GetOid", "order": 0, "type": "STRING" },
+                  "type": { "name": "$Type", "order": 1,  "type": "autocomplete",
+                    "data": [
+                      { "id": "Integer", "name": "Integer" },
+                      { "id": "Boolean", "name": "Boolean" },
+                      { "id": "OctetString", "name": "String" }
+                    ]
+                  },
+                  "value": { "name": "$Value", "order": 4, "type": "STRING", "visible": "data.act !== 'set'"  }
+                },
+                "default": {
+                  "act": "on",
+                  "oid": "1.3.6.1.4.1.2.6.2.2.1.2.1",
+                  "type": "Integer",
+                  "value": "1"
+                }
+              }
+           }
+        }
+      }
+    },
+    "default": {
+      "host": "127.0.0.1",
+      "port": 161,
+      "trap_port": 162,
+      "community": "public",
+      "transport": "udp4",
+      "version": 0
+    },
+    "defaultchild": {
+      "type": "get",
+      "get_oid": "1.3.6.1.2.1.1.5.0",
+      "table_oid": "1.3.6.1.2.1.2.2",
+      "trap_oid": "",
+      "interval": 60,
+      "dn": "",
+      "parse": "String(value)",
+      "number": false,
+      "actions": [
+        {
+          "act": "on",
+          "oid": "1.3.6.1.4.1.2.6.2.2.1.2.1",
+          "type": "Integer",
+          "value": "1"
+        }
+      ]
+    }
+  }
+}

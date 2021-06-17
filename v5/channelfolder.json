@@ -1,0 +1,32 @@
+{
+  "grid": [{ "id": "p2", "xs": 12, "class": "main", "table": "devhard" }],
+  "spacing": 4,
+
+  "p2": [
+    { "prop": "chan", "title": "$Title", "type": "input" },
+    { "prop": "host", "title": "$Host", "default": "127.0.0.1", "type": "input" },
+    { "prop": "port", "title": "$Port", "default": 161, "type": "number" },
+    { "prop": "trap_port", "title": "$TrapPort", "default": 162, "type": "number" },
+    { "prop": "community", "title": "$Community", "default":"public", "type": "input" },
+    {
+      "prop": "transport",
+      "title": "$Transport",
+      "default": 3,
+      "type": "droplist",
+      "data": [
+        { "id": "udp4", "title": "UDP4" },
+        { "id": "udp6", "title": "UDP6" }
+      ]
+    },
+    {
+      "prop": "version",
+      "title": "$Version",
+      "default": 4,
+      "type": "droplist",
+      "data": [
+        { "id": 0, "title": "Version1" },
+        { "id": 1, "title": "Version2c" }
+      ]
+    }
+  ]
+}

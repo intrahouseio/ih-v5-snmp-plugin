@@ -1,0 +1,47 @@
+{
+  "grid": [{ "id": "p2", "xs": 12, "class": "main", "table": "devhard" }],
+  "spacing": 4,
+
+  "p2": [
+    { "prop": "chan", "title": "$Channel", "type": "input" },
+    { "prop": "r", "title": "Чтение", "type": "cb", "hide": "1==1" },
+    { "prop": "w", "title": "Запись", "type": "cb", "hide": "1==1" },
+    {
+      "prop": "type",
+      "title": "$Type",
+      "hide": "data.p2.w",
+      "type": "droplist",
+      "data": [
+        { "id": "get", "title": "GET" },
+        { "id": "table", "title": "TABLE" },
+        { "id": "trap", "title": "TRAP" }
+      ]
+    },
+    { "prop": "table_oid", "title": "$TableOid", "type": "input", "hide": "data.p2.w || data.p2.type.id != 'table'" },
+    { "prop": "get_oid", "title": "$GetOid", "type": "input", "hide": "data.p2.w" },
+    { "prop": "trap_oid", "title": "$TrapOid", "type": "input", "hide": "data.p2.w || data.p2.type.id != 'trap'" },
+    {
+      "prop": "interval",
+      "title": "$Interval",
+      "type": "number",
+      "hide": "data.p2.w || (data.p2.type.id != 'get' && data.p2.type.id != 'table')"
+    },
+
+    { "prop": "parse", "title": "$Parse", "type": "input", "hide": "data.p2.w" },
+    {
+      "prop": "act",
+      "title": "$Action",
+      "type": "droplist",
+      "hide": "!data.p2.w",
+      "data": [
+        { "id": "on", "title": "on" },
+        { "id": "off", "title": "off" },
+        { "id": "toggle", "title": "toggle" },
+        { "id": "set", "title": "set" }
+      ]
+    },
+    { "prop": "oid", "title": "$GetOid", "type": "input", "hide": "!data.p2.w" },
+
+    { "prop": "value", "title": "$Value", "type": "input", "hide": "!data.p2.w || (data.p2.act.id !== 'set')" }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "description": "SNMP plugin",
+  "gendevices": 0,
+  "smart": 1,
+  "restartOnChannelsChange": 1,
+
+  "channelsPopup": [
+    { "id": "folder", "title": "$NewNode" },
+    { "id": "channel_read", "title": "$ChannelRead" },
+    { "id": "channel_write", "title": "$ChannelWrite" }
+
+  ],
+
+  "default_folder": {
+    "r":1,
+    "chan":"$NewNode",
+    "host": "127.0.0.1",
+    "port": 161,
+    "trap_port": 162,
+    "community": "public",
+    "transport": "udp4",
+    "version": 0
+  },
+
+  "default_channel_read": {
+    "r":1,
+    "type": "get",
+    "get_oid": "1.3.6.1.2.1.1.5.0",
+    "table_oid": "1.3.6.1.2.1.2.2",
+    "trap_oid": "",
+    "interval": 60,
+    "dn": "",
+    "parse": "String(value)",
+    "number": false
+  },
+
+  "default_channel_write": {
+    "w":1,
+    "act": "on",
+    "oid": "1.3.6.1.4.1.2.6.2.2.1.2.1",
+    "type": "Integer",
+    "value": "1"
+  }
+}

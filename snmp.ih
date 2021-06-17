@@ -1,0 +1,6 @@
+{
+    "id":"snmp",
+    "description":"SNMP plugin",
+    "cross": true,
+    "version":"5.5.0"
+}

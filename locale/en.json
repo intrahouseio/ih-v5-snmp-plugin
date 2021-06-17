@@ -1,0 +1,26 @@
+{
+  "Parent": "Options",
+  "Child": "Chanel",
+  "Host": "Host",
+  "Port": "Port",
+  "TrapPort": "Trap Port",
+  "Community": "Community",
+  "Transport": "Family",
+  "Version": "Version",
+  "Type": "Type",
+  "TableOid": "Table OID",
+  "GetOid": "OID",
+  "TrapOid": "Reverse trap OID",
+  "Interval": "Interval (sec)",
+  "Device": "Device",
+  "Parse": "Formula for calculating the value",
+  "Number": "Convert to number",
+  "Actions":"Actions",
+  "Action":"Action",
+  "Value":"Value",
+  "NewNode":"New Node",
+  "Title":"Node Title",
+  "ChannelRead": "Reading channel",
+  "ChannelWrite": "Writing channel"
+
+}
