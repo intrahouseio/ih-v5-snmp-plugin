@@ -4,12 +4,25 @@
   "smart": 1,
   "restartOnChannelsChange": 1,
 
-  "channelsPopup": [
+  "channel_popup": {
+    "add":[
+    { "id": "channel_read", "title": "$ChannelRead" },
+    { "id": "channel_write", "title": "$ChannelWrite" }
+    ],
+    "copypaste":true,
+    "delete":true
+  },
+
+  "channel_folder_popup": {
+    "add":[
     { "id": "folder", "title": "$NewFolder" },
     { "id": "channel_folder", "title": "$NewNode" },
     { "id": "channel_read", "title": "$ChannelRead" },
     { "id": "channel_write", "title": "$ChannelWrite" }
-  ],
+    ],
+    "copypaste":true,
+    "delete":true
+  },
 
   "default_channel_folder": {
     "r":1,
