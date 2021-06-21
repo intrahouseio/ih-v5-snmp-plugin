@@ -16,9 +16,10 @@
      
         { "prop": "chan", "title": "$Channel",  "type": "link", "command":"forward",  "width": 250 },
         { "prop": "r", "title": "Read",  "type": "cb", "width": 64 },
-        { "prop": "get_oid", "title": "$GetOid",  "type": "input", "width": 150},
+        { "prop": "get_oid", "title": "$ReadOid",  "type": "input", "width": 150},
         { "prop": "w", "title": "Write",  "type": "cb", "width": 64 },
-        { "prop": "oid", "title": "$Oid",  "type": "input", "width": 150},
+        { "prop": "oid", "title": "$WriteOid",  "type": "input", "width": 150},
+        { "prop": "interval", "title": "$Interval",  "type": "input", "width": 100},
         { "prop": "did", "title": "$Device",  "type": "link", "command":"forward", "width": 250  },
         { "prop": "prop", "title": "$DeviceProperty", "type": "text",  "width": 100 },
         { "prop": "realtime_chan_val", "title": "Канал: значение", "type": "text",  "width": 64 },

@@ -77,9 +77,15 @@ module.exports = async function(plugin) {
   }
 
   function setWorkerP({ host, port, version, community, transport, dn }, type, oid, interval) {
+    if (!interval) {
+      plugin.log('Empty polling interval! oid = ' + oid + ' skipped!\n');
+      return;
+    }
+
     if (!STORE.workers.polling[port]) {
       STORE.workers.polling[port] = {};
     }
+
     STORE.workers.polling[port][`${host}_${oid}_${interval}`] = {
       host,
       port,
@@ -207,7 +213,7 @@ module.exports = async function(plugin) {
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
           STORE.links[`${info.host}_${item.oid}`].forEach(link =>
-            res.push({dn:link.dn, value:link.parser(checkValue(item.type, item.value))})
+            res.push({ dn: link.dn, value: link.parser(checkValue(item.type, item.value)) })
           );
         }
       });
@@ -216,7 +222,7 @@ module.exports = async function(plugin) {
         STORE.childs[key].forEach(i => {
           if (i.type === 'table' && i.table_oid === info.oid) {
             if (STORE.links[`${info.host}_${i.get_oid}`]) {
-              STORE.links[`${info.host}_${i.get_oid}`].forEach(link => res.push({dn:link.dn, err:err.message}));
+              STORE.links[`${info.host}_${i.get_oid}`].forEach(link => res.push({ dn: link.dn, err: err.message }));
             }
           }
         })
@@ -273,8 +279,7 @@ module.exports = async function(plugin) {
     Object.keys(STORE.workers.polling).forEach(key => workerPolling(key, STORE.workers.polling[key]));
   }
 
-
-  function deviceAction (device) {
+  function deviceAction(device) {
     plugin.log(device);
     if (STORE.actions[device.dn] && STORE.actions[device.dn][device.prop]) {
       const item = STORE.actions[device.dn][device.prop];
@@ -296,12 +301,11 @@ module.exports = async function(plugin) {
       STORE.actions[device.dn][device.prop].session.set(varbinds, err => {
         if (err === null) {
           // plugin.setDeviceValue(device.dn, device.prop === 'on' ? 1 : 0);
-          plugin.sendData([{dn:device.dn, value:device.prop === 'on' ? 1 : 0}]);
+          plugin.sendData([{ dn: device.dn, value: device.prop === 'on' ? 1 : 0 }]);
         }
       });
     }
   }
-
 
   function checkValue(type, value) {
     if (type === 70) {

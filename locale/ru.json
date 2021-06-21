@@ -11,6 +11,8 @@
   "TableOid": "Table OID",
   "GetOid": "OID",
   "Oid": "OID",
+  "ReadOid": "Get OID",
+  "WriteOid": "Write OID",
   "TrapOid": "Reverse trap OID",
   "Interval": "Интервал (сек)",
   "Device": "Устройство",
