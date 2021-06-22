@@ -86,6 +86,7 @@ module.exports = async function(plugin) {
       STORE.workers.polling[port] = {};
     }
 
+    plugin.log(`START polling ${host}_${oid} interval: ${interval} \n`);
     STORE.workers.polling[port][`${host}_${oid}_${interval}`] = {
       host,
       port,
@@ -191,7 +192,7 @@ module.exports = async function(plugin) {
   function messageGet(err, info, data) {
     const res = [];
     if (err === null) {
-      data.forEach(i => plugin.log(`GET ${info.oid}, oid: ${i.oid}, value: ${i.value.toString()}`, 1));
+      data.forEach(i => plugin.log(`GET response ${info.host}, oid: ${i.oid}, value: ${i.value.toString()}`, 1));
 
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
@@ -201,7 +202,10 @@ module.exports = async function(plugin) {
         }
       });
     } else if (STORE.links[`${info.host}_${info.oid}`]) {
-      STORE.links[`${info.host}_${info.oid}`].forEach(link => res.push({ dn: link.dn, err: err.message }));
+      plugin.log(`GET error ${info.host}, oid: ${info.oid} err: ${err.message}`);
+      STORE.links[`${info.host}_${info.oid}`].forEach(link => {
+        res.push({ dn: link.dn, err: err.message })
+      });
     }
     if (res.length) plugin.sendData(res);
   }
@@ -233,6 +237,8 @@ module.exports = async function(plugin) {
 
   function taskPooling(item) {
     const session = snmp.createSession(item.host, item.community, {
+      retries: 0,
+      timeout: 3000,
       sourcePort: item.port,
       version: item.version,
       transport: item.transport
@@ -248,6 +254,7 @@ module.exports = async function(plugin) {
 
     function req() {
       if (item.type === 'get') {
+        plugin.log(`GET request ${item.host}, oid: ${item.oid}`, 1);
         session.get([item.oid], (err, data) => messageGet(err, item, data));
       }
 
