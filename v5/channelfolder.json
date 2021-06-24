@@ -1,15 +1,35 @@
 {
-  "grid": [{ "id": "p2", "xs": 12, "class": "main", "table": "devhard" }],
+  "grid": [
+    { "id": "p0", "xs": 12, "class": "main", "table": "devhard", "hide":"data.p2.r" },
+    { "id": "p1", "xs": 4, "class": "main", "table": "devhard", "hide":"!data.p2.r" },
+    { "id": "p2", "xs": 4, "class": "main", "table": "devhard", "hide":"!data.p2.r" },
+    { "id": "p3", "xs": 4, "class": "main", "table": "devhard", "hide":"!data.p2.r" }
+  ],
   "spacing": 4,
 
-  "p2": [
+  "p0": [
     { "prop": "chan", "title": "$Title", "type": "input" },
     { "prop": "txt", "title": "$Comment", "type": "input" },
+    { "prop": "skip", "title": "Блокировать опрос", "type": "cb" }
+  ],
+
+  "p1": [
+    { "prop": "chan", "title": "$Title", "type": "input" },
+    { "prop": "txt", "title": "$Comment", "type": "input" },
+    { "prop": "skip", "title": "Блокировать опрос", "type": "cb" }
+  ],
+
+  "p2": [
     { "prop": "r", "title": "Чтение", "type": "cb", "hide": "1==1" },
-    { "prop": "host", "title": "$Host", "type": "input", "hide": "!data.p2.r" },
-    { "prop": "port", "title": "$Port", "type": "number", "hide": "!data.p2.r" },
-    { "prop": "trap_port", "title": "$TrapPort", "type": "number", "hide": "!data.p2.r" },
-    { "prop": "community", "title": "$Community", "type": "input", "hide": "!data.p2.r" },
+    { "prop": "host", "title": "$Host", "type": "input" },
+    { "prop": "port", "title": "$Port", "type": "number" },
+    { "prop": "usetrap", "title": "Use Traps", "type": "cb" },
+    { "prop": "trap_port", "title": "$TrapPort", "type": "number", "hide": "!data.p2.r || !data.p2.usetrap" }
+   
+  ],
+
+  "p3": [   
+    { "prop": "community", "title": "$Community", "type": "input" },
     {
       "prop": "transport",
       "title": "$Transport",
@@ -23,7 +43,6 @@
     {
       "prop": "version",
       "title": "$Version",
-      "hide": "!data.p2.r",
       "type": "droplist",
       "data": [
         { "id": 0, "title": "Version1" },

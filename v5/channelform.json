@@ -5,8 +5,8 @@
   "p2": [
     { "prop": "chan", "title": "$Channel", "type": "input" },
     { "prop": "devpropname", "title": "$Devpropname", "type": "input" },
-    { "prop": "r", "title": "Чтение", "type": "cb", "hide": "1==1" },
-    { "prop": "w", "title": "Запись", "type": "cb", "hide": "1==1" },
+    { "prop": "r", "title": "$Read", "type": "cb", "hide": "1==1" },
+    { "prop": "w", "title": "$Write", "type": "cb", "hide": "1==1" },
     {
       "prop": "type",
       "title": "$Type",

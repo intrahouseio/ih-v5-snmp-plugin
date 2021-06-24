@@ -2,6 +2,7 @@
  * app.js
  * snmp
  */
+const util = require('util');
 
 const Trap = require('./lib/trap');
 
@@ -86,7 +87,7 @@ module.exports = async function(plugin) {
       STORE.workers.polling[port] = {};
     }
 
-    plugin.log(`START polling ${host}_${oid} interval: ${interval} \n`);
+    plugin.log(`START polling ${host} oid:${oid} interval: ${interval} \n`, 1);
     STORE.workers.polling[port][`${host}_${oid}_${interval}`] = {
       host,
       port,
@@ -99,8 +100,10 @@ module.exports = async function(plugin) {
     };
   }
 
-  function setWorkerL({ host, trap_port }) {
-    STORE.workers.listener[`${trap_port}`] = { host, port: trap_port };
+  function setWorkerL({ host, trap_port, usetrap }) {
+    if (usetrap) {
+      STORE.workers.listener[`${trap_port}`] = { host, port: trap_port };
+    }
   }
 
   function setLink(oid, dn, parser, host) {
@@ -178,7 +181,7 @@ module.exports = async function(plugin) {
   }
 
   function messageTrap({ data, info }) {
-    plugin.log(`TRAP ${data.oid}, value: ${data.value.toString()}`);
+    plugin.log(`<= TRAP ${data.oid}, value: ${data.value.toString()}`, 1);
     const res = [];
     if (STORE.links[`${info.address}_${data.oid}`]) {
       STORE.links[`${info.address}_${data.oid}`].forEach(link =>
@@ -192,7 +195,9 @@ module.exports = async function(plugin) {
   function messageGet(err, info, data) {
     const res = [];
     if (err === null) {
-      data.forEach(i => plugin.log(`GET response ${info.host}, oid: ${i.oid}, value: ${i.value.toString()}`, 1));
+      data.forEach(i =>
+        plugin.log(`=> GET response host: ${info.host}, oid: ${i.oid}, value: ${i.value.toString()}`, 1)
+      );
 
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
@@ -202,9 +207,9 @@ module.exports = async function(plugin) {
         }
       });
     } else if (STORE.links[`${info.host}_${info.oid}`]) {
-      plugin.log(`GET error ${info.host}, oid: ${info.oid} err: ${err.message}`);
+      plugin.log(`=> GET error host:${info.host}, oid: ${info.oid} err: ${err.message}`);
       STORE.links[`${info.host}_${info.oid}`].forEach(link => {
-        res.push({ dn: link.dn, err: err.message })
+        res.push({ dn: link.dn, err: err.message });
       });
     }
     if (res.length) plugin.sendData(res);
@@ -213,7 +218,9 @@ module.exports = async function(plugin) {
   function messageTable(err, info, data) {
     const res = [];
     if (err === null) {
-      data.forEach(i => plugin.log(`TABLE ${info.oid}, oid: ${i.oid}, value: ${i.value.toString()}`));
+      data.forEach(i =>
+        plugin.log(`=> TABLE response host: ${info.host}, oid: ${i.oid}, value: ${i.value.toString()}`, 1)
+      );
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
           STORE.links[`${info.host}_${item.oid}`].forEach(link =>
@@ -238,7 +245,7 @@ module.exports = async function(plugin) {
   function taskPooling(item) {
     const session = snmp.createSession(item.host, item.community, {
       retries: 0,
-      timeout: 3000,
+      timeout: 5000,
       sourcePort: item.port,
       version: item.version,
       transport: item.transport
@@ -253,17 +260,22 @@ module.exports = async function(plugin) {
     });
 
     function req() {
-      if (item.type === 'get') {
-        plugin.log(`GET request ${item.host}, oid: ${item.oid}`, 1);
-        session.get([item.oid], (err, data) => messageGet(err, item, data));
-      }
+      try {
+        if (item.type === 'get') {
+          plugin.log(`<= GET request host ${item.host}, oid ${item.oid}`, 1);
+          session.get([item.oid], (err, data) => messageGet(err, item, data));
+        }
 
-      if (item.type === 'table') {
-        session.subtree(
-          item.oid,
-          data => messageTable(null, item, data),
-          err => messageTable(err, item, [])
-        );
+        if (item.type === 'table') {
+          plugin.log(`<= TABLE request host ${item.host}, oid ${item.oid}`, 1);
+          session.subtree(
+            item.oid,
+            data => messageTable(null, item, data),
+            err => messageTable(err, item, [])
+          );
+        }
+      } catch (e) {
+        plugin.exit(1, 'Connection error: ' + util.inspect(e));
       }
     }
 
@@ -272,8 +284,22 @@ module.exports = async function(plugin) {
   }
 
   function workerListener(item) {
-    const trap = new Trap({ port: item.port });
-    trap.on('data', messageTrap);
+    try {
+      const trap = new Trap({ port: item.port });
+      trap.on('data', messageTrap);
+
+      trap.server.on('error', err => {
+        let errStr = 'Ошибка трапа: ';
+        if (err.errno == 'EADDRINUSE' && err.syscall == 'bind') {
+          errStr += 'порт ' + err.port + ' занят другим процессом!';
+        } else {
+          errStr += util.inspect(err);
+        }
+        plugin.exit(1, errStr);
+      });
+    } catch (e) {
+      plugin.exit(1, 'Connection error: ' + util.inspect(e));
+    }
   }
 
   function workerPolling(port, pool) {
@@ -282,7 +308,6 @@ module.exports = async function(plugin) {
 
   function startWorkers() {
     Object.keys(STORE.workers.listener).forEach(key => workerListener(STORE.workers.listener[key]));
-
     Object.keys(STORE.workers.polling).forEach(key => workerPolling(key, STORE.workers.polling[key]));
   }
 
