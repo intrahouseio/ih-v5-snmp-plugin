@@ -5,28 +5,36 @@
   "restartOnChannelsChange": 1,
 
   "channel_popup": {
-    "add":[
-    { "id": "channel_read", "title": "$ChannelRead" },
-    { "id": "channel_write", "title": "$ChannelWrite" }
+    "add": [
+      { "id": "channel_read", "title": "$ChannelRead" },
+      { "id": "channel_write", "title": "$ChannelWrite" }
     ],
-    "copypaste":true,
-    "delete":true
+    "copypaste": true,
+    "delete": true
   },
 
   "channel_folder_popup": {
-    "add":[
-    { "id": "folder", "title": "$NewFolder" },
-    { "id": "channel_folder", "title": "$NewNode" },
-    { "id": "channel_read", "title": "$ChannelRead" },
-    { "id": "channel_write", "title": "$ChannelWrite" }
+    "add": [
+      { "id": "folder", "title": "$NewFolder" },
+      { "id": "channel_folder", "title": "$NewNode" },
+      { "id": "channel_read", "title": "$ChannelRead" },
+      { "id": "channel_write", "title": "$ChannelWrite" }
     ],
-    "copypaste":true,
-    "delete":true
+    "browse": {
+      "variant": "fields",
+      "fields": [
+        { "prop": "host", "title": "Host", "type": "text" },
+        { "prop": "port", "title": "Port", "type": "text" },
+        { "prop": "oid", "title": "Oid", "type": "input", "default":"1.3.6.1.2.1.2.2" }
+      ]
+    },
+    "copypaste": true,
+    "delete": true
   },
 
   "default_channel_folder": {
-    "r":1,
-    "chan":"$NewNode",
+    "r": 1,
+    "chan": "$NewNode",
     "host": "127.0.0.1",
     "port": 161,
     "trap_port": 162,
@@ -36,8 +44,8 @@
   },
 
   "default_channel_read": {
-    "r":1,
-    "chan":"ch_1",
+    "r": 1,
+    "chan": "ch_1",
     "type": "get",
     "get_oid": "1.3.6.1.2.1.1.5.0",
     "table_oid": "1.3.6.1.2.1.2.2",
@@ -49,8 +57,8 @@
   },
 
   "default_channel_write": {
-    "chan":"cw_1",
-    "w":1,
+    "chan": "cw_1",
+    "w": 1,
     "act": "on",
     "oid": "1.3.6.1.4.1.2.6.2.2.1.2.1",
     "type": "Integer",

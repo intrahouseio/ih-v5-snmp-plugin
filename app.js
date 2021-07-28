@@ -3,10 +3,12 @@
  * snmp
  */
 const util = require('util');
+const snmp = require('net-snmp');
 
 const Trap = require('./lib/trap');
+const Scanner = require('./lib/scanner');
 
-const snmp = require('net-snmp');
+
 const Uint64LE = require('int64-buffer').Uint64LE;
 
 const REVERSE_TRAP_ORIGIN = 1;
@@ -24,12 +26,19 @@ const STORE = {
 };
 
 module.exports = async function(plugin) {
+  const scanner = new Scanner(plugin);
+
   initStore(plugin.channels);
   startWorkers();
 
   plugin.on('act', data => {
     if (!data) return;
     data.forEach(item => deviceAction(item));
+  });
+
+  plugin.onScan( params => {
+  
+    scanner.request(params);
   });
 
   function createFunction(string) {
@@ -290,7 +299,7 @@ module.exports = async function(plugin) {
 
       trap.server.on('error', err => {
         let errStr = 'Ошибка трапа: ';
-        if (err.errno == 'EADDRINUSE' && err.syscall == 'bind') {
+        if (err.code == 'EADDRINUSE' && err.syscall == 'bind') {
           errStr += 'порт ' + err.port + ' занят другим процессом!';
         } else {
           errStr += util.inspect(err);
@@ -356,4 +365,50 @@ module.exports = async function(plugin) {
     }
     return value;
   }
+
+  /*
+  // Перенесено в модуль scanner
+  function scanning(item) {
+    let errstr = '';
+    if (!item.host) errstr += 'No host! ';
+    if (!item.port) errstr += 'No port! ';
+    if (!item.oid) errstr += 'No table oid! ';
+    if (errstr) {
+      scanError(errstr);
+      return;
+    }
+
+    const scanSession = snmp.createSession(item.host, item.community, {
+      retries: 0,
+      timeout: 5000,
+      sourcePort: item.port,
+      version: item.version,
+      transport: item.transport
+    });
+
+    scanSession.on('error', e => {
+      scanError(e);
+    });
+
+    try {
+      plugin.log(`<= SCAN TABLE request host ${item.host}, oid ${item.oid}`, 1);
+      scanSession.subtree(
+        item.oid,
+        data => scanResult(data),
+        err => scanError(err, item)
+      );
+    } catch (e) {
+      scanError(util.inspect(e), item);
+    }
+
+    function scanError(err) {
+      plugin.log('Scan error: '+err);
+      plugin.send({ ...item, type: 'scan', err });
+    }
+
+    function scanResult(data) {
+      plugin.send({ ...item, type: 'scan', data });
+    }
+  }
+  */
 };
