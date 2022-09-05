@@ -31,9 +31,12 @@ module.exports = async function(plugin) {
   initStore(plugin.channels);
   startWorkers();
 
-  plugin.on('act', data => {
-    if (!data) return;
-    data.forEach(item => deviceAction(item));
+ 
+  
+  plugin.onAct( message => {
+    plugin.log('ACT data=' + util.inspect(message.data));
+    if (!message.data) return;
+    message.data.forEach(item => deviceAction(item));
   });
 
   plugin.onScan( params => {
