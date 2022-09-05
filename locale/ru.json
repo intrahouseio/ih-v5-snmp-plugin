@@ -24,5 +24,17 @@
   "NewNode":"Новый узел",
   "Title":"Название",
   "ChannelRead": "Канал для чтения",
-  "ChannelWrite": "Канал для записи"
+  "ChannelWrite": "Канал для записи",
+  "header_testwrite": "Тест записи",
+  "testValue" : "Значение",
+  "realtime_chan_str": "Канал",
+  "realtime_dev_str": "Устройство",
+  "realtime_chan_val" : "Канал: значение",
+  "realtime_chan_ts" : "Канал: время",
+  "realtime_dev_val" : "Устройство: значение",
+  "realtime_dev_ts" : "Устройство: время",
+  "realtime_dev_err" : "Устройство: ошибка",
+  "deviceForPublish":"Устройство для публикации",
+  "calc":"Формула для сообщения",
+  "diffw": "Для записи использовать другой OID"
 }

@@ -3,11 +3,11 @@
   "gendevices": 0,
   "smart": 1,
   "restartOnChannelsChange": 1,
+  
 
   "channel_popup": {
     "add": [
-      { "id": "channel_read", "title": "$ChannelRead" },
-      { "id": "channel_write", "title": "$ChannelWrite" }
+      { "id": "channel", "title": "$NewChannel" }
     ],
     "copypaste": true,
     "delete": true
@@ -17,8 +17,8 @@
     "add": [
       { "id": "folder", "title": "$NewFolder" },
       { "id": "channel_folder", "title": "$NewNode" },
-      { "id": "channel_read", "title": "$ChannelRead" },
-      { "id": "channel_write", "title": "$ChannelWrite" }
+      { "id": "channel", "title": "$NewChannel" }
+    
     ],
     "browse": {
       "variant": "fields",
@@ -43,7 +43,7 @@
     "version": 0
   },
 
-  "default_channel_read": {
+  "default_channel": {
     "r": 1,
     "chan": "ch_1",
     "type": "get",
@@ -51,17 +51,14 @@
     "table_oid": "1.3.6.1.2.1.2.2",
     "trap_oid": "",
     "interval": 60,
-    "dn": "",
     "parse": "String(value)",
-    "number": false
-  },
+    "number": false,
+ 
+    "w": 0,
+    "diffw":0,
 
-  "default_channel_write": {
-    "chan": "cw_1",
-    "w": 1,
-    "act": "on",
-    "oid": "1.3.6.1.4.1.2.6.2.2.1.2.1",
-    "type": "Integer",
+    "set_oid": "",
+    "set_type": "Integer",
     "value": "1"
   }
 }

@@ -8,7 +8,6 @@ const snmp = require('net-snmp');
 const Trap = require('./lib/trap');
 const Scanner = require('./lib/scanner');
 
-
 const Uint64LE = require('int64-buffer').Uint64LE;
 
 const REVERSE_TRAP_ORIGIN = 1;
@@ -31,16 +30,13 @@ module.exports = async function(plugin) {
   initStore(plugin.channels);
   startWorkers();
 
- 
-  
-  plugin.onAct( message => {
+  plugin.onAct(message => {
     plugin.log('ACT data=' + util.inspect(message.data));
     if (!message.data) return;
     message.data.forEach(item => deviceAction(item));
   });
 
-  plugin.onScan( params => {
-  
+  plugin.onScan(params => {
     scanner.request(params);
   });
 
@@ -68,6 +64,7 @@ module.exports = async function(plugin) {
     }
   }
 
+  /*
   function setAction(parent, child) {
     if (child.dn !== '' && child.actions) {
       child.actions.forEach(i => {
@@ -76,6 +73,16 @@ module.exports = async function(plugin) {
         }
         STORE.actions[child.dn][i.act] = { session: null, act: i, parent };
       });
+    }
+  }
+  */
+
+  function setAction(parent, child) {
+    if (child.w) {
+      if (!STORE.actions[child.chanId]) {
+        STORE.actions[child.chanId] = {};
+      }
+      STORE.actions[child.chanId] = { session: null, parent };
     }
   }
 
@@ -118,31 +125,31 @@ module.exports = async function(plugin) {
     }
   }
 
-  function setLink(oid, dn, parser, host) {
+  function setLink(oid, chanId, parser, host) {
     const id = `${host}_${oid}`;
     if (!STORE.links[id]) {
       STORE.links[id] = {};
     }
-    STORE.links[id][dn] = { dn, parser: createFunction(parser) };
+    STORE.links[id][chanId] = { chanId, parser: createFunction(parser) };
   }
 
   function mappingGet(parent, child) {
     setWorkerP(parent, 'get', child.get_oid, child.interval);
-    setLink(child.get_oid, child.dn, child.parse, parent.host);
+    setLink(child.get_oid, child.chanId, child.parse, parent.host);
   }
 
   function mappingTable(parent, child) {
     setWorkerP(parent, 'table', child.table_oid, child.interval);
-    setLink(child.get_oid, child.dn, child.parse, parent.host);
+    setLink(child.get_oid, child.chanId, child.parse, parent.host);
   }
 
   function mappingTrap(type, item, host) {
     if (type === REVERSE_TRAP_EXTRA && item.trap_oid !== '') {
-      setLink(item.trap_oid, item.dn, item.parse, host);
+      setLink(item.trap_oid, item.chanId, item.parse, host);
     }
 
     if (type === REVERSE_TRAP_ORIGIN && item.get_oid !== '') {
-      setLink(item.get_oid, item.dn, item.parse, host);
+      setLink(item.get_oid, item.chanId, item.parse, host);
     }
   }
 
@@ -198,7 +205,7 @@ module.exports = async function(plugin) {
     if (STORE.links[`${info.address}_${data.oid}`]) {
       STORE.links[`${info.address}_${data.oid}`].forEach(link =>
         // plugin.setDeviceValue({dn:link.dn, value:link.parser(checkValue(data.type, data.value))})
-        res.push({ dn: link.dn, value: link.parser(checkValue(data.type, data.value)) })
+        res.push({ id: link.chanId, value: link.parser(checkValue(data.type, data.value)) })
       );
     }
     if (res.length) plugin.sendData(res);
@@ -214,14 +221,14 @@ module.exports = async function(plugin) {
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
           STORE.links[`${info.host}_${item.oid}`].forEach(link =>
-            res.push({ dn: link.dn, value: link.parser(checkValue(item.type, item.value)) })
+            res.push({ id: link.chanId, value: link.parser(checkValue(item.type, item.value)) })
           );
         }
       });
     } else if (STORE.links[`${info.host}_${info.oid}`]) {
       plugin.log(`=> GET error host:${info.host}, oid: ${info.oid} err: ${err.message}`);
       STORE.links[`${info.host}_${info.oid}`].forEach(link => {
-        res.push({ dn: link.dn, err: err.message });
+        res.push({ id: link.chanId, err: err.message, chstatus: 1 });
       });
     }
     if (res.length) plugin.sendData(res);
@@ -236,7 +243,7 @@ module.exports = async function(plugin) {
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
           STORE.links[`${info.host}_${item.oid}`].forEach(link =>
-            res.push({ dn: link.dn, value: link.parser(checkValue(item.type, item.value)) })
+            res.push({ id: link.chanId, value: link.parser(checkValue(item.type, item.value)) })
           );
         }
       });
@@ -245,7 +252,7 @@ module.exports = async function(plugin) {
         STORE.childs[key].forEach(i => {
           if (i.type === 'table' && i.table_oid === info.oid) {
             if (STORE.links[`${info.host}_${i.get_oid}`]) {
-              STORE.links[`${info.host}_${i.get_oid}`].forEach(link => res.push({ dn: link.dn, err: err.message }));
+              STORE.links[`${info.host}_${i.get_oid}`].forEach(link => res.push({ id: link.chanId, err: err.message, chstatus: 1 }));
             }
           }
         })
@@ -323,6 +330,7 @@ module.exports = async function(plugin) {
     Object.keys(STORE.workers.polling).forEach(key => workerPolling(key, STORE.workers.polling[key]));
   }
 
+  /*
   function deviceAction(device) {
     plugin.log(device);
     if (STORE.actions[device.dn] && STORE.actions[device.dn][device.prop]) {
@@ -350,6 +358,36 @@ module.exports = async function(plugin) {
       });
     }
   }
+  */
+
+ function deviceAction(actObj) {
+  plugin.log('DO DEVICE ACTION '+util.inspect(actObj));
+  if (STORE.actions[actObj.chanId]) {
+    const item = STORE.actions[actObj.chanId];
+    if (item.session === null) {
+      STORE.actions[actObj.chanId].session = snmp.createSession(item.parent.host, item.parent.community, {
+        sourcePort: item.parent.port,
+        version: item.parent.version,
+        transport: item.parent.transport
+      });
+    }
+    const varbinds = [
+      {
+        oid: actObj.diffw ? actObj.set_oid : actObj.get_oid,
+        type: snmp.ObjectType[actObj.set_type],
+        value: getValue( actObj.set_type, actObj.value)
+      }
+    ];
+
+    plugin.log(varbinds);
+    STORE.actions[actObj.chanId].session.set(varbinds, err => {
+      if (err === null) {
+        // plugin.setDeviceValue(device.dn, device.prop === 'on' ? 1 : 0);
+        plugin.sendData([{ id: actObj.chanId, value: actObj.value }]);
+      }
+    });
+  }
+}
 
   function checkValue(type, value) {
     if (type === 70) {
