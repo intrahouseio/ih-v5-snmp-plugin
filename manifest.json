@@ -59,6 +59,7 @@
 
     "set_oid": "",
     "set_type": "Integer",
-    "value": "1"
+    "value": "1",
+    "calc_out" : ""
   }
 }
