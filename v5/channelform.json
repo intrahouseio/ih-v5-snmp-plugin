@@ -4,7 +4,7 @@
     { "id": "prw", "xs": 5, "class": "main", "table": "devhard" },
     { "id": "p2", "xs": 7, "class": "main", "table": "devhard" },
     { "id": "p3", "xs": 5, "class": "main", "table": "devhard", "hide": "!data.prw.w" },
-    { "id": "p9", "xs": 7, "class": "main", "table": "devhard" },
+    { "id": "p9", "xs": 7, "class": "main", "table": "onechannelrtTable", "hide": "!data.prw.r" },
     { "id": "ptest", "xs": 5, "class": "main", "table": "devhard", "hide": "!data.prw.w" }
   ],
   "spacing": 4,
