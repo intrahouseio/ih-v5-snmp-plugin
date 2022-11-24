@@ -3,7 +3,7 @@
   "gendevices": 0,
   "smart": 1,
   "restartOnChannelsChange": 1,
-  
+  "share_node_folder_fields":["r","host","port","trap_port","community","transport","version","usetrap"],
 
   "channel_popup": {
     "add": [
@@ -15,9 +15,9 @@
 
   "channel_folder_popup": {
     "add": [
-      { "id": "folder", "title": "$NewFolder" },
-      { "id": "channel_folder", "title": "$NewNode" },
-      { "id": "channel", "title": "$NewChannel" }
+    { "id": "channel_folder", "title": "$NewFolder" },
+      { "id": "channel_node_folder", "title": "$NewNode" },
+      { "id": "channel", "title": "$Channel" }
     
     ],
     "browse": {
@@ -32,7 +32,8 @@
     "delete": true
   },
 
-  "default_channel_folder": {
+  "default_channel_node_folder": {
+    "foldertype": "node",
     "r": 1,
     "chan": "$NewNode",
     "host": "127.0.0.1",

@@ -1,19 +1,19 @@
 {
   "grid": [
-    { "id": "p0", "xs": 12, "class": "main", "table": "devhard", "hide":"data.p2.r" },
-    { "id": "p1", "xs": 4, "class": "main", "table": "devhard", "hide":"!data.p2.r" },
-    { "id": "p2", "xs": 4, "class": "main", "table": "devhard", "hide":"!data.p2.r" },
-    { "id": "p3", "xs": 4, "class": "main", "table": "devhard", "hide":"!data.p2.r" }
+    { "id": "p0", "xs": 12, "class": "main", "table": "devhard", "hide":"data.p1.foldertype == 'node'" },
+    { "id": "p1", "xs": 4, "class": "main", "table": "devhard", "hide":"data.p1.foldertype != 'node'" },
+    { "id": "p2", "xs": 4, "class": "main", "table": "devhard", "hide":"data.p1.foldertype != 'node'" },
+    { "id": "p3", "xs": 4, "class": "main", "table": "devhard", "hide":"data.p1.foldertype != 'node'" }
   ],
   "spacing": 4,
 
   "p0": [
     { "prop": "chan", "title": "$Title", "type": "input" },
-    { "prop": "txt", "title": "$Comment", "type": "input" },
-    { "prop": "skip", "title": "Блокировать опрос", "type": "cb" }
+    { "prop": "txt", "title": "$Comment", "type": "input" }
   ],
 
   "p1": [
+    { "prop": "foldertype", "title": "", "type": "text", "hide": "1==1" },
     { "prop": "chan", "title": "$Title", "type": "input" },
     { "prop": "txt", "title": "$Comment", "type": "input" },
     { "prop": "skip", "title": "Блокировать опрос", "type": "cb" }
@@ -24,7 +24,7 @@
     { "prop": "host", "title": "$Host", "type": "input" },
     { "prop": "port", "title": "$Port", "type": "number" },
     { "prop": "usetrap", "title": "Use Traps", "type": "cb" },
-    { "prop": "trap_port", "title": "$TrapPort", "type": "number", "hide": "!data.p2.r || !data.p2.usetrap" }
+    { "prop": "trap_port", "title": "$TrapPort", "type": "number", "hide": "data.p2.usetrap != 1" }
    
   ],
 
@@ -33,7 +33,6 @@
     {
       "prop": "transport",
       "title": "$Transport",
-      "hide": "!data.p2.r",
       "type": "droplist",
       "data": [
         { "id": "udp4", "title": "UDP4" },
