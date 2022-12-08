@@ -20,7 +20,7 @@
   ],
 
   "p2": [
-    { "prop": "r", "title": "Чтение", "type": "cb", "hide": "1==1" },
+    { "prop": "r", "title": "Чтение", "type": "cb" },
     { "prop": "host", "title": "$Host", "type": "input" },
     { "prop": "port", "title": "$Port", "type": "number" },
     { "prop": "usetrap", "title": "Use Traps", "type": "cb" },

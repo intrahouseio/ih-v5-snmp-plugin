@@ -192,9 +192,12 @@ module.exports = async function(plugin) {
 
   function initStore(data = []) {
     data.forEach(item => {
+      
       if (item.parentid) {
         setChild(item);
       } else {
+        item.port = Number(item.port);
+        item.version = Number(item.version); 
         setParent(item);
       }
     });
