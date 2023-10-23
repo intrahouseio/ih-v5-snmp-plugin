@@ -24,15 +24,19 @@ const STORE = {
   links: {},
   actions: {}
 };
+let queue = [];
+let semaphor; 
 
-module.exports = async function(plugin) {
+const sleep = ms => new Promise(resolve => (nextTimer1 = setTimeout(resolve, ms)));
+
+module.exports = async function (plugin) {
   const scanner = new Scanner(plugin);
 
   initStore(plugin.channels);
   startWorkers();
 
   plugin.onAct(message => {
-    plugin.log('ACT data=' + util.inspect(message.data));
+    plugin.log('ACT data=' + util.inspect(message.data), 1);
     if (!message.data) return;
     message.data.forEach(item => deviceAction(item));
   });
@@ -99,25 +103,45 @@ module.exports = async function(plugin) {
 
   function setWorkerP({ host, port, version, community, transport, dn }, type, oid, interval) {
     if (!interval) {
-      plugin.log('Empty polling interval! oid = ' + oid + ' skipped!\n');
+      plugin.log('Empty polling interval! oid = ' + oid + ' skipped!\n', 1);
       return;
     }
 
-    if (!STORE.workers.polling[port]) {
-      STORE.workers.polling[port] = {};
+    if (!STORE.workers.polling[host+'_'+port]) {
+      STORE.workers.polling[host+'_'+port] = {};
     }
 
     plugin.log(`START polling ${host} oid:${oid} interval: ${interval} \n`, 1);
-    STORE.workers.polling[port][`${host}_${oid}_${interval}`] = {
-      host,
-      port,
-      version,
-      community,
-      transport,
-      type,
-      oid,
-      interval
-    };
+    if (type == 'get') {
+      if (STORE.workers.polling[host+'_'+port][`${host}_${interval}`] == undefined) {
+        STORE.workers.polling[host+'_'+port][`${host}_${interval}`] = {
+          host,
+          port,
+          version,
+          community,
+          transport,
+          type,
+          oid: [oid],
+          interval
+        };
+      } else {
+        STORE.workers.polling[host+'_'+port][`${host}_${interval}`].oid.push(oid)
+      }
+    }
+    if (type == 'table') {
+      STORE.workers.polling[host+'_'+port][`${host}_${oid}_${interval}`] = {
+        host,
+        port,
+        version,
+        community,
+        transport,
+        type,
+        oid,
+        interval
+      };
+    }
+
+
   }
 
   function setWorkerL({ host, trap_port, usetrap }) {
@@ -187,17 +211,17 @@ module.exports = async function(plugin) {
     Object.keys(STORE.links).forEach(key => {
       STORE.links[key] = Object.keys(STORE.links[key]).map(k => STORE.links[key][k]);
     });
-    plugin.log('createStruct STORE.actions='+util.inspect(STORE.actions, null, 4));
+    plugin.log('createStruct STORE.actions=' + util.inspect(STORE.actions, null, 4), 1);
   }
 
   function initStore(data = []) {
     data.forEach(item => {
-      
+
       if (item.parentid) {
         setChild(item);
       } else {
         item.port = Number(item.port);
-        item.version = Number(item.version); 
+        item.version = Number(item.version);
         setParent(item);
       }
     });
@@ -218,7 +242,7 @@ module.exports = async function(plugin) {
 
   function messageGet(err, info, data) {
     const res = [];
-    if (err === null) {
+    if (err == null) {
       data.forEach(i =>
         plugin.log(`=> GET response host: ${info.host}, oid: ${i.oid}, value: ${i.value.toString()}`, 1)
       );
@@ -226,12 +250,12 @@ module.exports = async function(plugin) {
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
           STORE.links[`${info.host}_${item.oid}`].forEach(link =>
-            res.push({ dn: link.dn, value: link.parser(checkValue(item.type, item.value)) })
+            res.push({ dn: link.dn, value: checkValue(item.type, item.value), chstatus: 0 })
           );
         }
       });
     } else if (STORE.links[`${info.host}_${info.oid}`]) {
-      plugin.log(`=> GET error host:${info.host}, oid: ${info.oid} err: ${err.message}`);
+      plugin.log(`=> GET error host:${info.host}, oid: ${info.oid} err: ${err.message}`, 1);
       STORE.links[`${info.host}_${info.oid}`].forEach(link => {
         res.push({ dn: link.dn, err: err.message, chstatus: 1 });
       });
@@ -248,7 +272,7 @@ module.exports = async function(plugin) {
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
           STORE.links[`${info.host}_${item.oid}`].forEach(link =>
-            res.push({ dn: link.dn, value: link.parser(checkValue(item.type, item.value)) })
+            res.push({ dn: link.dn, value: checkValue(item.type, item.value), chstatus: 0 })
           );
         }
       });
@@ -266,7 +290,10 @@ module.exports = async function(plugin) {
     if (res.length) plugin.sendData(res);
   }
 
-  function taskPooling(item) {
+  async function taskPooling(item, index) {
+    let oidarr = item.oid.slice(0);
+
+
     const session = snmp.createSession(item.host, item.community, {
       retries: 0,
       timeout: 5000,
@@ -274,6 +301,7 @@ module.exports = async function(plugin) {
       version: item.version,
       transport: item.transport
     });
+
 
     session.on('error', e => {
       if (item.type === 'get') {
@@ -283,28 +311,58 @@ module.exports = async function(plugin) {
       }
     });
 
-    function req() {
-      try {
+    await sleep(index* 100);
+
+    async function req(arr) {
+      return new Promise((resolve, reject) => {
         if (item.type === 'get') {
-          plugin.log(`<= GET request host ${item.host}, oid ${item.oid}`, 1);
-          session.get([item.oid], (err, data) => messageGet(err, item, data));
+          plugin.log(`<= GET request host ${item.host}, oid ${arr}`, 1);
+          session.get(arr, (err, data) => {
+
+            if (err) {
+              plugin.log("err " + util.inspect(err), 1)
+              resolve(err)
+            } else {
+              messageGet(err, item, data);
+              resolve(data);
+            }
+          });
         }
 
         if (item.type === 'table') {
           plugin.log(`<= TABLE request host ${item.host}, oid ${item.oid}`, 1);
           session.subtree(
             item.oid,
-            data => messageTable(null, item, data),
-            err => messageTable(err, item, [])
+            data => {
+              messageTable(null, item, data)
+              resolve(data);
+            },
+            err => {
+              messageTable(err, item, []);
+              resolve(err);
+            }
           );
         }
-      } catch (e) {
-        plugin.exit(1, 'Connection error: ' + util.inspect(e));
-      }
-    }
+      })
 
-    setInterval(req, item.interval * 1000);
-    req();
+    }
+    async function sendNext() {
+      if (!semaphor) {
+        semaphor = true;
+        if (item.type == 'get') {
+          while (oidarr.length > 0) {
+            await sleep(10)
+            const res = await req(oidarr.splice(0, 10));
+          }
+          oidarr = item.oid.slice(0);
+        }
+        if (item.type == 'table') await req();
+        semaphor = false;
+      }      
+      setTimeout(sendNext, item.interval * 1000);
+
+    }
+    sendNext();
   }
 
   function workerListener(item) {
@@ -326,13 +384,15 @@ module.exports = async function(plugin) {
     }
   }
 
-  function workerPolling(port, pool) {
-    Object.keys(pool).forEach(key => taskPooling(pool[key]));
+  function workerPolling(pool) {
+    //plugin.log("pool " + util.inspect(pool))
+    Object.keys(pool).forEach((key, index) => taskPooling(pool[key], index));
   }
 
   function startWorkers() {
     Object.keys(STORE.workers.listener).forEach(key => workerListener(STORE.workers.listener[key]));
-    Object.keys(STORE.workers.polling).forEach(key => workerPolling(key, STORE.workers.polling[key]));
+    Object.keys(STORE.workers.polling).forEach(key => workerPolling(STORE.workers.polling[key]));
+    //plugin.log("Store " + util.inspect(STORE.workers.polling))
   }
 
   /*
@@ -365,34 +425,34 @@ module.exports = async function(plugin) {
   }
   */
 
- function deviceAction(actObj) {
-  // plugin.log('DO DEVICE ACTION '+util.inspect(actObj));
-  if (STORE.actions[actObj.dn]) {
-    const item = STORE.actions[actObj.dn];
-    if (item.session === null) {
-      STORE.actions[actObj.dn].session = snmp.createSession(item.parent.host, item.parent.community, {
-        sourcePort: item.parent.port,
-        version: item.parent.version,
-        transport: item.parent.transport
+  function deviceAction(actObj) {
+    // plugin.log('DO DEVICE ACTION '+util.inspect(actObj));
+    if (STORE.actions[actObj.dn]) {
+      const item = STORE.actions[actObj.dn];
+      if (item.session === null) {
+        STORE.actions[actObj.dn].session = snmp.createSession(item.parent.host, item.parent.community, {
+          sourcePort: item.parent.port,
+          version: item.parent.version,
+          transport: item.parent.transport
+        });
+      }
+      const varbinds = [
+        {
+          oid: actObj.diffw ? actObj.set_oid : actObj.get_oid,
+          type: snmp.ObjectType[actObj.set_type],
+          value: getValue(actObj.set_type, actObj.val)
+        }
+      ];
+
+      //plugin.log(varbinds, 1);
+      STORE.actions[actObj.dn].session.set(varbinds, err => {
+        if (err === null) {
+          // plugin.setDeviceValue(device.dn, device.prop === 'on' ? 1 : 0);
+          plugin.sendData([{ dn: actObj.dn, value: actObj.value }]);
+        }
       });
     }
-    const varbinds = [
-      {
-        oid: actObj.diffw ? actObj.set_oid : actObj.get_oid,
-        type: snmp.ObjectType[actObj.set_type],
-        value: getValue( actObj.set_type, actObj.val)
-      }
-    ];
-
-    plugin.log(varbinds);
-    STORE.actions[actObj.dn].session.set(varbinds, err => {
-      if (err === null) {
-        // plugin.setDeviceValue(device.dn, device.prop === 'on' ? 1 : 0);
-        plugin.sendData([{ dn: actObj.dn, value: actObj.value }]);
-      }
-    });
   }
-}
 
   function checkValue(type, value) {
     if (type === 70) {

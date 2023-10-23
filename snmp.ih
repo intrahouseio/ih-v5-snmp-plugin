@@ -2,6 +2,6 @@
     "id":"snmp",
     "description":"SNMP plugin",
     "cross": true,
-    "version":"5.5.14",
+    "version":"5.5.15",
     "clear":"node_modules"
 }
