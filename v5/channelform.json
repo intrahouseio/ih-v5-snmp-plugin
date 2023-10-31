@@ -41,7 +41,7 @@
       "hide": "!data.prw.r || (data.p2.type.id != 'get' && data.p2.type.id != 'table')"
     },
 
-    { "prop": "parse", "title": "$Parse", "type": "input", "hide": "!data.prw.r" }
+    { "prop": "calc", "title": "$Devhard_Calc", "type": "input", "hide": "!data.prw.r" }
   ],
 
   "p3": [
