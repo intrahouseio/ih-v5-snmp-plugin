@@ -19,6 +19,7 @@ const app = require('./app');
     plugin.log('Received params...', 1);
 
     plugin.channels = await plugin.channels.get();
+    
     plugin.log('Received channels...'+util.inspect(plugin.channels), 1);
 
     app(plugin);

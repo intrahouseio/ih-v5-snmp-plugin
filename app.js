@@ -25,7 +25,7 @@ const STORE = {
   actions: {}
 };
 let queue = [];
-let semaphor; 
+let semaphor;
 
 const sleep = ms => new Promise(resolve => (nextTimer1 = setTimeout(resolve, ms)));
 
@@ -107,14 +107,14 @@ module.exports = async function (plugin) {
       return;
     }
 
-    if (!STORE.workers.polling[host+'_'+port]) {
-      STORE.workers.polling[host+'_'+port] = {};
+    if (!STORE.workers.polling[host + '_' + port]) {
+      STORE.workers.polling[host + '_' + port] = {};
     }
 
     plugin.log(`START polling ${host} oid:${oid} interval: ${interval} \n`, 1);
     if (type == 'get') {
-      if (STORE.workers.polling[host+'_'+port][`${host}_${interval}`] == undefined) {
-        STORE.workers.polling[host+'_'+port][`${host}_${interval}`] = {
+      if (STORE.workers.polling[host + '_' + port][`${host}_${interval}`] == undefined) {
+        STORE.workers.polling[host + '_' + port][`${host}_${interval}`] = {
           host,
           port,
           version,
@@ -125,11 +125,11 @@ module.exports = async function (plugin) {
           interval
         };
       } else {
-        STORE.workers.polling[host+'_'+port][`${host}_${interval}`].oid.push(oid)
+        STORE.workers.polling[host + '_' + port][`${host}_${interval}`].oid.push(oid)
       }
     }
     if (type == 'table') {
-      STORE.workers.polling[host+'_'+port][`${host}_${oid}_${interval}`] = {
+      STORE.workers.polling[host + '_' + port][`${host}_${oid}_${interval}`] = {
         host,
         port,
         version,
@@ -254,10 +254,14 @@ module.exports = async function (plugin) {
           );
         }
       });
-    } else if (STORE.links[`${info.host}_${info.oid}`]) {
-      plugin.log(`=> GET error host:${info.host}, oid: ${info.oid} err: ${err.message}`, 1);
-      STORE.links[`${info.host}_${info.oid}`].forEach(link => {
-        res.push({ dn: link.dn, err: err.message, chstatus: 1 });
+    } else {
+      data.forEach(item => {
+        if (STORE.links[`${info.host}_${item}`]) {
+          plugin.log(`=> GET error host:${info.host}, oid: ${item} err: ${err.message}`, 1);
+          STORE.links[`${info.host}_${item}`].forEach(link => {
+            res.push({ dn: link.dn, chstatus: 1 });
+          });
+        }
       });
     }
     if (res.length) plugin.sendData(res);
@@ -311,7 +315,7 @@ module.exports = async function (plugin) {
       }
     });
 
-    await sleep(index* 100);
+    await sleep(index * 100);
 
     async function req(arr) {
       return new Promise((resolve, reject) => {
@@ -320,9 +324,9 @@ module.exports = async function (plugin) {
           session.get(arr, (err, data) => {
 
             if (err) {
-              plugin.log("err " + util.inspect(err), 1)
-              resolve(err)
+              reject(err)
             } else {
+
               messageGet(err, item, data);
               resolve(data);
             }
@@ -339,7 +343,7 @@ module.exports = async function (plugin) {
             },
             err => {
               messageTable(err, item, []);
-              resolve(err);
+              reject(err);
             }
           );
         }
@@ -351,14 +355,30 @@ module.exports = async function (plugin) {
         semaphor = true;
         if (item.type == 'get') {
           while (oidarr.length > 0) {
-            await sleep(10)
-            const res = await req(oidarr.splice(0, 10));
+            await sleep(10);
+            let chunk = oidarr.splice(0, 10);
+            try {
+              const res = await req(chunk);
+            } catch (e) {
+              plugin.log("err " + util.inspect(e), 1);
+              let errArr = [];
+              for (let i = 0; i < chunk.length; i++) {
+                try {
+                  const res = await req([chunk[i]]);
+                } catch (e) {
+                  errArr.push(chunk[i]);
+                }
+              }
+              
+              messageGet(e, item, Array.from(new Set(errArr)));
+            }
+
           }
           oidarr = item.oid.slice(0);
         }
         if (item.type == 'table') await req();
         semaphor = false;
-      }      
+      }
       setTimeout(sendNext, item.interval * 1000);
 
     }
