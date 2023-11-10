@@ -234,7 +234,7 @@ module.exports = async function (plugin) {
     if (STORE.links[`${info.address}_${data.oid}`]) {
       STORE.links[`${info.address}_${data.oid}`].forEach(link =>
         // plugin.setDeviceValue({dn:link.dn, value:link.parser(checkValue(data.type, data.value))})
-        res.push({ dn: link.dn, value: link.parser(checkValue(data.type, data.value)) })
+        res.push({ dn: link.dn, value: link.parser(checkValue(data.type, data.value)), chstatus:0 })
       );
     }
     if (res.length) plugin.sendData(res);
@@ -276,6 +276,8 @@ module.exports = async function (plugin) {
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
           STORE.links[`${info.host}_${item.oid}`].forEach(link =>
+            //  res.push({ dn: link.dn, value: item.value, chstatus: 0 })
+            
             res.push({ dn: link.dn, value: checkValue(item.type, item.value), chstatus: 0 })
           );
         }
@@ -335,9 +337,9 @@ module.exports = async function (plugin) {
 
         if (item.type === 'table') {
           plugin.log(`<= TABLE request host ${item.host}, oid ${item.oid}`, 1);
-          session.subtree(
-            item.oid,
+          session.subtree(item.oid,
             data => {
+              
               messageTable(null, item, data)
               resolve(data);
             },
@@ -376,7 +378,13 @@ module.exports = async function (plugin) {
           }
           oidarr = item.oid.slice(0);
         }
-        if (item.type == 'table') await req();
+        if (item.type == 'table') {
+          try {
+            await req();
+          } catch (e) {
+          plugin.log("Error read " + item.oid, 1);
+          }
+        }
         semaphor = false;
       }
       setTimeout(sendNext, item.interval * 1000);
@@ -489,6 +497,11 @@ module.exports = async function (plugin) {
       const b = new Buffer(temp2);
       return b.readFloatLE();
     }
+    
+    if (type == 4) {
+      return value.toString();
+    }
+    
     return value;
   }
 
