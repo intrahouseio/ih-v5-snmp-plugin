@@ -22,7 +22,8 @@
   "p2": [
     { "prop": "r", "title": "Чтение", "type": "cb" },
     { "prop": "host", "title": "$Host", "type": "input" },
-    { "prop": "port", "title": "$Port", "type": "number" },
+    { "prop": "port", "title": "$Port", "type": "number" }, 
+    { "prop": "maxreadlen", "title": "$maxreadlen", "type": "number" },
     { "prop": "usetrap", "title": "Use Traps", "type": "cb" },
     { "prop": "trap_port", "title": "$TrapPort", "type": "number", "hide": "data.p2.usetrap != 1" }
    

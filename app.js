@@ -15,6 +15,7 @@ const REVERSE_TRAP_ORIGIN = 1;
 const REVERSE_TRAP_EXTRA = 2;
 
 const STORE = {
+  parentsIdArr: [],
   parents: [],
   childs: {},
   workers: {
@@ -31,8 +32,8 @@ const sleep = ms => new Promise(resolve => (nextTimer1 = setTimeout(resolve, ms)
 
 module.exports = async function (plugin) {
   const scanner = new Scanner(plugin);
-
   initStore(plugin.channels);
+  //plugin.log("Store parents " + util.inspect(STORE.parents))
   startWorkers();
 
   plugin.onAct(message => {
@@ -84,24 +85,25 @@ module.exports = async function (plugin) {
 
   function setAction(parent, child) {
     if (child.w) {
-      if (!STORE.actions[child.dn]) {
-        STORE.actions[child.dn] = {};
+      if (!STORE.actions[child.id]) {
+        STORE.actions[child.id] = {};
       }
-      STORE.actions[child.dn] = { session: null, parent };
+      STORE.actions[child.id] = { session: null, parent };
     }
   }
 
   function setChild(item) {
-    if (!STORE.childs[item.parentid]) STORE.childs[item.parentid] = [];
-    STORE.childs[item.parentid].push(item);
+    if (!STORE.childs[item.parentnodefolder]) STORE.childs[item.parentnodefolder] = [];
+    STORE.childs[item.parentnodefolder].push(item);
   }
 
   function setParent(item) {
-    STORE.childs[item.id] = [];
+    STORE.childs[item.parentid] = [];
+    STORE.parentsIdArr.push(item.parentid);
     STORE.parents.push(item);
   }
 
-  function setWorkerP({ host, port, version, community, transport, dn }, type, oid, interval) {
+  function setWorkerP({ host, port, version, community, transport, maxreadlen }, type, oid, interval) {
     if (!interval) {
       plugin.log('Empty polling interval! oid = ' + oid + ' skipped!\n', 1);
       return;
@@ -122,7 +124,8 @@ module.exports = async function (plugin) {
           transport,
           type,
           oid: [oid],
-          interval
+          interval,
+          maxreadlen
         };
       } else {
         STORE.workers.polling[host + '_' + port][`${host}_${interval}`].oid.push(oid)
@@ -137,7 +140,8 @@ module.exports = async function (plugin) {
         transport,
         type,
         oid,
-        interval
+        interval,
+        maxreadlen
       };
     }
 
@@ -150,31 +154,31 @@ module.exports = async function (plugin) {
     }
   }
 
-  function setLink(oid, dn, parser, host) {
-    const id = `${host}_${oid}`;
-    if (!STORE.links[id]) {
-      STORE.links[id] = {};
+  function setLink(oid, id, parser, host) {
+    const itemid = `${host}_${oid}`;
+    if (!STORE.links[itemid]) {
+      STORE.links[itemid] = {};
     }
-    STORE.links[id][dn] = { dn, parser: createFunction(parser) };
+    STORE.links[itemid][id] = { id, parser: createFunction(parser) };
   }
 
   function mappingGet(parent, child) {
     setWorkerP(parent, 'get', child.get_oid, child.interval);
-    setLink(child.get_oid, child.dn, child.parse, parent.host);
+    setLink(child.get_oid, child.id, child.parse, parent.host);
   }
 
   function mappingTable(parent, child) {
     setWorkerP(parent, 'table', child.table_oid, child.interval);
-    setLink(child.get_oid, child.dn, child.parse, parent.host);
+    setLink(child.get_oid, child.id, child.parse, parent.host);
   }
 
   function mappingTrap(type, item, host) {
     if (type === REVERSE_TRAP_EXTRA && item.trap_oid !== '') {
-      setLink(item.trap_oid, item.dn, item.parse, host);
+      setLink(item.trap_oid, item.id, item.parse, host);
     }
 
     if (type === REVERSE_TRAP_ORIGIN && item.get_oid !== '') {
-      setLink(item.get_oid, item.dn, item.parse, host);
+      setLink(item.get_oid, item.id, item.parse, host);
     }
   }
 
@@ -198,10 +202,8 @@ module.exports = async function (plugin) {
 
   function createStruct() {
     STORE.parents.forEach(parent => {
-      const childs = STORE.childs[parent.id];
-
+      const childs = STORE.childs[parent.parentid];
       setWorkerL(parent);
-
       childs.forEach(child => {
         mappingLinks(parent, child);
         setAction(parent, child);
@@ -215,16 +217,21 @@ module.exports = async function (plugin) {
   }
 
   function initStore(data = []) {
+    
     data.forEach(item => {
 
-      if (item.parentid) {
+      if (STORE.parentsIdArr.includes(item.parentnodefolder)) {
         setChild(item);
       } else {
         item.port = Number(item.port);
         item.version = Number(item.version);
+        item.parentid = item.parentnodefolder;
+        item.id = item.parentnodefolder;
         setParent(item);
+        setChild(item);
       }
     });
+    
     createStruct();
   }
 
@@ -233,8 +240,8 @@ module.exports = async function (plugin) {
     const res = [];
     if (STORE.links[`${info.address}_${data.oid}`]) {
       STORE.links[`${info.address}_${data.oid}`].forEach(link =>
-        // plugin.setDeviceValue({dn:link.dn, value:link.parser(checkValue(data.type, data.value))})
-        res.push({ dn: link.dn, value: link.parser(checkValue(data.type, data.value)), chstatus:0 })
+        // plugin.setDeviceValue({id:link.id, value:link.parser(checkValue(data.type, data.value))})
+        res.push({ id: link.id, value: link.parser(checkValue(data.type, data.value)), chstatus:0 })
       );
     }
     if (res.length) plugin.sendData(res);
@@ -250,7 +257,7 @@ module.exports = async function (plugin) {
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
           STORE.links[`${info.host}_${item.oid}`].forEach(link =>
-            res.push({ dn: link.dn, value: checkValue(item.type, item.value), chstatus: 0 })
+            res.push({ id: link.id, value: checkValue(item.type, item.value), chstatus: 0 })
           );
         }
       });
@@ -259,7 +266,7 @@ module.exports = async function (plugin) {
         if (STORE.links[`${info.host}_${item}`]) {
           plugin.log(`=> GET error host:${info.host}, oid: ${item} err: ${err.message}`, 1);
           STORE.links[`${info.host}_${item}`].forEach(link => {
-            res.push({ dn: link.dn, chstatus: 1 });
+            res.push({ id: link.id, chstatus: 1 });
           });
         }
       });
@@ -278,7 +285,7 @@ module.exports = async function (plugin) {
           STORE.links[`${info.host}_${item.oid}`].forEach(link =>
             //  res.push({ dn: link.dn, value: item.value, chstatus: 0 })
             
-            res.push({ dn: link.dn, value: checkValue(item.type, item.value), chstatus: 0 })
+            res.push({ id: link.id, value: checkValue(item.type, item.value), chstatus: 0 })
           );
         }
       });
@@ -287,7 +294,7 @@ module.exports = async function (plugin) {
         STORE.childs[key].forEach(i => {
           if (i.type === 'table' && i.table_oid === info.oid) {
             if (STORE.links[`${info.host}_${i.get_oid}`]) {
-              STORE.links[`${info.host}_${i.get_oid}`].forEach(link => res.push({ dn: link.dn, err: err.message, chstatus: 1 }));
+              STORE.links[`${info.host}_${i.get_oid}`].forEach(link => res.push({ id: link.id, err: err.message, chstatus: 1 }));
             }
           }
         })
@@ -355,10 +362,11 @@ module.exports = async function (plugin) {
     async function sendNext() {
       if (!semaphor) {
         semaphor = true;
+        const maxreadlen = item.maxreadlen || 10;
         if (item.type == 'get') {
           while (oidarr.length > 0) {
             await sleep(10);
-            let chunk = oidarr.splice(0, 10);
+            let chunk = oidarr.splice(0, maxreadlen);
             try {
               const res = await req(chunk);
             } catch (e) {
@@ -455,10 +463,10 @@ module.exports = async function (plugin) {
 
   function deviceAction(actObj) {
     // plugin.log('DO DEVICE ACTION '+util.inspect(actObj));
-    if (STORE.actions[actObj.dn]) {
-      const item = STORE.actions[actObj.dn];
+    if (STORE.actions[actObj.id]) {
+      const item = STORE.actions[actObj.id];
       if (item.session === null) {
-        STORE.actions[actObj.dn].session = snmp.createSession(item.parent.host, item.parent.community, {
+        STORE.actions[actObj.id].session = snmp.createSession(item.parent.host, item.parent.community, {
           sourcePort: item.parent.port,
           version: item.parent.version,
           transport: item.parent.transport
@@ -473,10 +481,10 @@ module.exports = async function (plugin) {
       ];
 
       //plugin.log(varbinds, 1);
-      STORE.actions[actObj.dn].session.set(varbinds, err => {
+      STORE.actions[actObj.id].session.set(varbinds, err => {
         if (err === null) {
-          // plugin.setDeviceValue(device.dn, device.prop === 'on' ? 1 : 0);
-          plugin.sendData([{ dn: actObj.dn, value: actObj.value }]);
+          // plugin.setDeviceValue(device.id, device.prop === 'on' ? 1 : 0);
+          plugin.sendData([{ id: actObj.id, value: actObj.value }]);
         }
       });
     }

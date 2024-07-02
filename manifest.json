@@ -1,9 +1,10 @@
 {
   "description": "SNMP plugin",
   "gendevices": 0,
-  "smart": 1,
-  "restartOnChannelsChange": 1,
-  "share_node_folder_fields":["r","host","port","trap_port","community","transport","version","usetrap"],
+  "innerId":1,
+  "smart": 0,
+  "restartOnChannelsChange": 0,
+  "share_node_folder_fields":["r","host","port","trap_port","community","transport","version","usetrap", "maxreadlen"],
 
   "channel_popup": {
     "add": [
@@ -38,6 +39,7 @@
     "chan": "$NewNode",
     "host": "127.0.0.1",
     "port": 161,
+    "maxreadlen": 10,
     "trap_port": 162,
     "community": "public",
     "transport": "udp4",
