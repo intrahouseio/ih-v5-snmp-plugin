@@ -33,7 +33,6 @@ const sleep = ms => new Promise(resolve => (nextTimer1 = setTimeout(resolve, ms)
 module.exports = async function (plugin) {
   const scanner = new Scanner(plugin);
   initStore(plugin.channels);
-  //plugin.log("Store parents " + util.inspect(STORE.parents))
   startWorkers();
 
   plugin.onAct(message => {
@@ -237,11 +236,11 @@ module.exports = async function (plugin) {
 
   function messageTrap({ data, info }) {
     plugin.log(`<= TRAP ${data.oid}, value: ${data.value.toString()}`, 1);
-    const res = [];
+    const res = [];    
     if (STORE.links[`${info.address}_${data.oid}`]) {
       STORE.links[`${info.address}_${data.oid}`].forEach(link =>
         // plugin.setDeviceValue({id:link.id, value:link.parser(checkValue(data.type, data.value))})
-        res.push({ id: link.id, value: link.parser(checkValue(data.type, data.value)), chstatus:0 })
+        res.push({ id: link.id, value: checkValue(data.type, data.value), chstatus:0 })
       );
     }
     if (res.length) plugin.sendData(res);
@@ -257,6 +256,7 @@ module.exports = async function (plugin) {
       data.forEach(item => {
         if (STORE.links[`${info.host}_${item.oid}`]) {
           STORE.links[`${info.host}_${item.oid}`].forEach(link =>
+
             res.push({ id: link.id, value: checkValue(item.type, item.value), chstatus: 0 })
           );
         }
