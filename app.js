@@ -97,7 +97,6 @@ module.exports = async function (plugin) {
   }
 
   function setParent(item) {
-    STORE.childs[item.parentid] = [];
     STORE.parentsIdArr.push(item.parentid);
     STORE.parents.push(item);
   }
@@ -222,12 +221,14 @@ module.exports = async function (plugin) {
       if (STORE.parentsIdArr.includes(item.parentnodefolder)) {
         setChild(item);
       } else {
-        item.port = Number(item.port);
-        item.version = Number(item.version);
-        item.parentid = item.parentnodefolder;
-        item.id = item.parentnodefolder;
-        setParent(item);
         setChild(item);
+        let item1 = Object.assign({}, item);
+        item1.port = Number(item1.port);
+        item1.version = Number(item1.version);
+        item1.parentid = item1.parentnodefolder;        
+        item1.id = item1.parentnodefolder;
+        setParent(item1);
+        
       }
     });
     
@@ -236,6 +237,7 @@ module.exports = async function (plugin) {
 
   function messageTrap({ data, info }) {
     plugin.log(`<= TRAP ${data.oid}, value: ${data.value.toString()}`, 1);
+    plugin.log("data " + util.inspect(data) + " info " + util.inspect(info))
     const res = [];    
     if (STORE.links[`${info.address}_${data.oid}`]) {
       STORE.links[`${info.address}_${data.oid}`].forEach(link =>
