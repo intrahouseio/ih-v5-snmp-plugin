@@ -48,6 +48,8 @@
     { "prop": "diffw", "title": "$diffw", "type": "cb" },
 
     { "prop": "set_oid", "title": "$WriteOid", "type": "input", "hide": "!data.p3.diffw" },
+    { "prop": "diffcom", "title": "$diffcom", "type": "cb" },
+    { "prop": "set_community", "title": "$WriteCom", "type": "input", "hide": "!data.p3.diffcom" },
     {
       "prop": "set_type",
       "title": "$Type",

@@ -468,7 +468,7 @@ module.exports = async function (plugin) {
     if (STORE.actions[actObj.id]) {
       const item = STORE.actions[actObj.id];
       if (item.session === null) {
-        STORE.actions[actObj.id].session = snmp.createSession(item.parent.host, item.parent.community, {
+        STORE.actions[actObj.id].session = snmp.createSession(item.parent.host, actObj.diffcom ? actObj.set_community : item.parent.community, {
           sourcePort: item.parent.port,
           version: item.parent.version,
           transport: item.parent.transport
@@ -478,17 +478,24 @@ module.exports = async function (plugin) {
         {
           oid: actObj.diffw ? actObj.set_oid : actObj.get_oid,
           type: snmp.ObjectType[actObj.set_type],
-          value: getValue(actObj.set_type, actObj.val)
+          value: getValue(actObj.set_type, actObj.value)
         }
       ];
 
       //plugin.log(varbinds, 1);
-      STORE.actions[actObj.id].session.set(varbinds, err => {
-        if (err === null) {
-          // plugin.setDeviceValue(device.id, device.prop === 'on' ? 1 : 0);
-          plugin.sendData([{ id: actObj.id, value: actObj.value }]);
-        }
-      });
+
+        STORE.actions[actObj.id].session.set(varbinds, (err, varb) => {
+          if (err === null) {
+            //plugin.log("varbinds " + util.inspect(varb));
+            plugin.sendData([{ id: actObj.id, value: getValue(actObj.set_type, varb[0].value )}]);
+            // plugin.setDeviceValue(device.id, device.prop === 'on' ? 1 : 0);
+            //plugin.sendData([{ id: actObj.id, value: actObj.value }]);
+          } else {
+            plugin.log("Write error " + util.inspect(err), 2)
+          }
+        });
+
+      
     }
   }
 

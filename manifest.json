@@ -59,8 +59,9 @@
  
     "w": 0,
     "diffw":0,
-
+    "diffcom":0,
     "set_oid": "",
+    "set_community": "write",
     "set_type": "Integer",
     "value": "1",
     "calc_out" : ""
