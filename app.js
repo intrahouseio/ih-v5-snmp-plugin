@@ -27,13 +27,19 @@ const STORE = {
 };
 let queue = [];
 let semaphor;
+const semaphorByHost = {};
 
-const sleep = ms => new Promise(resolve => (nextTimer1 = setTimeout(resolve, ms)));
+const sleep = ms => new Promise(resolve => (setTimeout(resolve, ms)));
 
 module.exports = async function (plugin) {
   const scanner = new Scanner(plugin);
   initStore(plugin.channels);
-  startWorkers();
+
+  try {
+    await startWorkers();
+  } catch (e) {
+    plugin.log('ERROR startWorkers'+util.inspect(e))
+  }
 
   plugin.onAct(message => {
     plugin.log('ACT data=' + util.inspect(message.data), 1);
@@ -326,7 +332,8 @@ module.exports = async function (plugin) {
       }
     });
 
-    await sleep(index * 100);
+     // await sleep(index * 100);
+    await sleep(100);
 
     async function req(arr) {
       return new Promise((resolve, reject) => {
@@ -362,8 +369,11 @@ module.exports = async function (plugin) {
 
     }
     async function sendNext() {
-      if (!semaphor) {
-        semaphor = true;
+      // if (!semaphor) {
+      if (!semaphorByHost[item.host]) {
+        plugin.log('sendNext '+item.host+' oidarr='+oidarr, 2);
+        // semaphor = true;
+        semaphorByHost[item.host] = true;
         const maxreadlen = item.maxreadlen || 10;
         if (item.type == 'get') {
           while (oidarr.length > 0) {
@@ -395,8 +405,12 @@ module.exports = async function (plugin) {
           plugin.log("Error read " + item.oid, 1);
           }
         }
-        semaphor = false;
+        // semaphor = false;
+        semaphorByHost[item.host] = false;
+      } else {
+         plugin.log('sendNext SKIP semaphor=true '+item.host+' oidarr='+oidarr, 2);
       }
+      plugin.log('NEXT sendNext '+item.host+' in ' +String(Number(item.interval))+' sec', 2);
       setTimeout(sendNext, item.interval * 1000);
 
     }
@@ -427,10 +441,15 @@ module.exports = async function (plugin) {
     Object.keys(pool).forEach((key, index) => taskPooling(pool[key], index));
   }
 
-  function startWorkers() {
+   async function startWorkers() {
     Object.keys(STORE.workers.listener).forEach(key => workerListener(STORE.workers.listener[key]));
-    Object.keys(STORE.workers.polling).forEach(key => workerPolling(STORE.workers.polling[key]));
+    // Object.keys(STORE.workers.polling).forEach(key => workerPolling(STORE.workers.polling[key]));
     //plugin.log("Store " + util.inspect(STORE.workers.polling))
+     for (const key of Object.keys(STORE.workers.polling)) {
+      for (const pool of Object.keys(STORE.workers.polling[key])) {
+        await taskPooling(STORE.workers.polling[key][pool]);
+      }
+    }
   }
 
   /*
