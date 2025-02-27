@@ -3,6 +3,7 @@
   "gendevices": 0,
   "innerId":1,
   "smart": 0,
+  "linkChstatus":1,
   "restartOnChannelsChange": 0,
   "share_node_folder_fields":["r","host","port","trap_port","community","transport","version","usetrap", "maxreadlen"],
 

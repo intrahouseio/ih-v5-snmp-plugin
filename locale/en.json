@@ -1,6 +1,7 @@
 {
   "Parent": "Options",
   "Child": "Chanel",
+  "BlockPolling": "Block polling",
   "Host": "Host",
   "Port": "Port",
   "TrapPort": "Trap Port",

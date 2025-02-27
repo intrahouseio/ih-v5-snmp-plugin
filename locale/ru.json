@@ -1,6 +1,7 @@
 {
   "Parent": "Настройки",
   "Child": "Канал",
+  "BlockPolling": "Блокировать опрос узла",
   "Host": "Host",
   "Port": "Port",
   "TrapPort": "Trap Port",

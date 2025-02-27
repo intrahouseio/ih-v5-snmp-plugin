@@ -15,12 +15,11 @@
   "p1": [
     { "prop": "foldertype", "title": "", "type": "text", "hide": "1==1" },
     { "prop": "chan", "title": "$Title", "type": "input" },
-    { "prop": "txt", "title": "$Comment", "type": "input" },
-    { "prop": "skip", "title": "Блокировать опрос", "type": "cb" }
+    { "prop": "txt", "title": "$Comment", "type": "input" }
   ],
 
   "p2": [
-    { "prop": "r", "title": "Чтение", "type": "cb" },
+    { "prop": "r", "title": "$BlockPolling", "type": "cb" },
     { "prop": "host", "title": "$Host", "type": "input" },
     { "prop": "port", "title": "$Port", "type": "number" }, 
     { "prop": "maxreadlen", "title": "$maxreadlen", "type": "number" },

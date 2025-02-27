@@ -11,6 +11,7 @@
 
   "p1": [
     { "prop": "chan", "title": "$Channel", "type": "input" },
+    { "prop": "title", "title": "$Title", "type": "input" },
     { "prop": "devpropname", "title": "$Devpropname", "type": "input" }
   ],
 
