@@ -2,6 +2,7 @@
   "Parent": "Options",
   "Child": "Chanel",
   "BlockPolling": "Block polling",
+  "EnablePolling": "Enable polling",
   "Host": "Host",
   "Port": "Port",
   "TrapPort": "Trap Port",

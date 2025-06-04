@@ -19,7 +19,7 @@
   ],
 
   "p2": [
-    { "prop": "r", "title": "$BlockPolling", "type": "cb" },
+    { "prop": "r", "title": "$EnablePolling", "type": "cb" },
     { "prop": "host", "title": "$Host", "type": "input" },
     { "prop": "port", "title": "$Port", "type": "number" }, 
     { "prop": "maxreadlen", "title": "$maxreadlen", "type": "number" },
